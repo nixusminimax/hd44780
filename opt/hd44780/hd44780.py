@@ -61,6 +61,8 @@ if config.lcd_lines == 2:
 GPIO.setmode(GPIO.BCM) # using BCM GPIO counting
 GPIO.setwarnings(False)
 #GPIO.cleanup()
+GPIO.setup(config.lcd_light, GPIO.OUT)
+
 GPIO.setup(config.lcd_E, GPIO.OUT)
 GPIO.setup(config.lcd_RS, GPIO.OUT)
 GPIO.setup(config.lcd_data4, GPIO.OUT)
