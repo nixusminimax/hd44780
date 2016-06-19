@@ -3,8 +3,11 @@
 #############################
 
 # Working Beta
+# 2do:
+# more bugfixing for 2 and 4 row LCDs
+# 
 # initial release 29/4/2015
-# Revision 15-01-2016
+# Revision 19-06-2016
 # jks
 
 # Imports
@@ -22,6 +25,8 @@ from uuid import getnode as get_mac
 import unicodedata
 import signal
 import socket
+import os
+
 
 #Variables 2 modify:
 #change the values in the config.py
@@ -55,7 +60,7 @@ if config.lcd_lines == 2:
 
 GPIO.setmode(GPIO.BCM) # using BCM GPIO counting
 GPIO.setwarnings(False)
-GPIO.cleanup()
+#GPIO.cleanup()
 GPIO.setup(config.lcd_E, GPIO.OUT)
 GPIO.setup(config.lcd_RS, GPIO.OUT)
 GPIO.setup(config.lcd_data4, GPIO.OUT)
@@ -131,13 +136,14 @@ def lcd_init():
 def lcd_cls(speed):
     for line in range(1,config.lcd_lines+1):
         lcd(line,'')
+        if speed == 'turbo':
+           sleep(0)
+        if speed == 'fast':
+           sleep(0.25)
         if speed == 'slow':
            sleep(.5)
-        if speed == 'fast':
-           sleep(0.3)
-        if speed == 'fast':
-           sleep(0.3)      
-    sleep(1)
+                 
+    sleep(0.5)
                 
 # HD44780 Backlight on/off
 def lcd_backlight(what):
@@ -147,6 +153,7 @@ def lcd_backlight(what):
 def handler(signum, frame):
     lcd_cls('fast')
     message = 'Shutting down...'
+    message = str(message)
     points = 13
     while points < len(message)+1: 
        lcd(1,message[:points])
@@ -155,6 +162,10 @@ def handler(signum, frame):
     lcd_cls('fast')
     sys.exit()
 
+def getCpuTemperature():
+    res = os.popen('vcgencmd measure_temp').readline() 
+    return(res.replace("temp=","").replace("'C\n",""))
+    
 ## Textstuff
 def center_text (Display_Lines,text):
     if config.lcd_width == 16:               
@@ -221,7 +232,8 @@ if not lms_unaviable():
                          
 try:
   while True:
-    info = ['power', 'mode', 'time', 'artist', 'album', 'title', 'genre']
+    cputemp = (getCpuTemperature())
+    info = ['power', 'mode', 'time', 'artist', 'album', 'title', 'genre', 'cputemperature']
     for question in info:
         if not lms_unaviable():
            error = 0             
@@ -251,17 +263,23 @@ try:
            break
         answer = lms_feedback(config.mac,question)
                         
+        if question == 'cputemperature':
+           cputemperature = getCpuTemperature()
+           cputemperature = cputemperature + "\376"
+           cputemperature = center_text(config.lcd_width,cputemperature)           
         if question == 'time':
            if answer == "0":
               power = 'off'
               break
         if question == 'mode':
+           if answer == 'stop':
+              lcd_backlight(False)
            if answer != 'play':
               if answer == '%3F':
                  answer = 'check mac setting'
               answer = answer.upper()
               answer = 'Player: '+answer
-              answer = center_text(config.lcd_width,answer)
+              answer = center_text(config.lcd_width,answer)              
               if config.lcd_lines == 2:
                  lcd(1,answer)
                  lcd(2,time.strftime("%d.%m.%Y %H:%M"))
@@ -269,8 +287,8 @@ try:
                  lcd(1,answer)
                  lcd(2,time.strftime("     %d.%m.%Y"))
                  lcd(3,time.strftime("       %H:%M")) 
-                 lcd(4,'')
-              sleep (3)
+                 lcd(4,cputemperature)                 
+                 sleep (3)
               break                
         if question == 'power':
            if answer == '1':
@@ -286,7 +304,8 @@ try:
               answer = center_text(config.lcd_width,answer)
               power = 'off'
               backlight_state = GPIO.input(config.lcd_light)
-              
+              lcd_backlight(False)
+                            
               ##act as clock:
               if config.act_as_clock != '' and type(config.act_as_clock) == int:
                  lcd(1,'') 
@@ -298,7 +317,7 @@ try:
                     lcd(1,answer)
                     lcd(2,time.strftime("     %d.%m.%Y"))
                     lcd(3,time.strftime("       %H:%M"))
-                    lcd(4,'')
+                    lcd(4,(cputemp))
               
               if config.act_as_clock == 'forever':
                  break
@@ -400,10 +419,20 @@ try:
                  
            elif question == "title":
               title = answer
+              
               if len(answer.strip()) > config.lcd_width:
+                 title_start = lms_feedback(config.mac,'title')
                  answer = " " * config.lcd_width + answer + " "
-                 slow = 0.25
+                 slow = 0.2
                  for i in range(len(answer) + 1):
+                     mode_now = lms_feedback(config.mac,'mode')
+                     if mode_now != 'play':
+                        lcd_cls('turbo')
+                        break  
+                     title_now = lms_feedback(config.mac,'title')
+                     if title_now != title_start:
+                        lcd_cls('turbo')
+                        break
                      scroll = answer[i:i+config.lcd_width]
                      if i == config.lcd_width:
                         slow = 0.4
