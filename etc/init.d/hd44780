@@ -282,7 +282,7 @@ try:
               answer = center_text(config.lcd_width,answer)              
               if config.lcd_lines == 2:
                  lcd(1,answer)
-                 lcd(2,time.strftime("%d.%m.%Y  %H:%M"))
+                 lcd(2,time.strftime("%d.%m.%Y %H:%M"))
               else:
                  lcd(1,answer)
                  lcd(2,time.strftime("     %d.%m.%Y"))
