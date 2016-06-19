@@ -42,7 +42,6 @@ do_start()
 	fi
 	
 	## 
-	/usr/bin/python /opt/hd44780/lcd.py &
 	echo "Starting $DAEMON_NAME .."
 	start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile --user $DAEMON_USER --chuid $DAEMON_USER --exec $DAEMON
 }
