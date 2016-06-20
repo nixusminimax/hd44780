@@ -2,12 +2,21 @@ import config
 from evdev import InputDevice
 from select import select
 import socket
+import subprocess
+import sys
 import telnetlib
 import time
 
-# This can be any other event number.
-# If there is only a single HID connected - that device should be #0
-dev = InputDevice('/dev/input/event0') 
+## mousedetection
+my_mouse = subprocess.check_output("grep 'mouse' /proc/bus/input/devices |cut -d ' ' -f3 |tr '\r\n' ' ' ", shell=True)
+my_mouse = my_mouse.replace(" ", "")
+
+if my_mouse == '':
+   print "no mouse detected"
+   sys.exit(0)
+
+dev = evdev.InputDevice('/dev/input/' + (my_mouse))
+
 
 ## Logitechmediaserverstuff
 def lms_unaviable():  
