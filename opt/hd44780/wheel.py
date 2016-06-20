@@ -82,15 +82,15 @@ while True:
                          lms_set_value(config.mac,'mixer volume',new_vol)
                                                                                     
                  #Left Button pressed
-                    elif event.code == 272 and event.value == 1:
-                         lms_set_value(config.mac,'playlist index','-1')
+                 elif event.code == 272 and event.value == 1:
+                      lms_set_value(config.mac,'playlist index','-1')
                         
                  #Right Button pressed       
-                    elif event.code == 273 and event.value == 1:
-                         lms_set_value(config.mac,'playlist index','+1')
+                 elif event.code == 273 and event.value == 1:
+                      lms_set_value(config.mac,'playlist index','+1')
                         
                  # Mouse Wheel pressed
-                    elif event.code == 274 and event.value == 1:
-                         lms_set_value(config.mac,'pause', '')
-                         #prevent to pause and unpause when the wheel is pressed a long time
-                         time.sleep (2)
+                 elif event.code == 274 and event.value == 1:
+                      lms_set_value(config.mac,'pause', '')
+                      #prevent to pause and unpause when the wheel is pressed a long time
+                      time.sleep (2)
