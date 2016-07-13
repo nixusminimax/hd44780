@@ -22,6 +22,7 @@ DAEMON=$DAEMON_SHELL" "$DAEMON_SCRIPT
 DAEMON_NAME=hd44780
 DAEMON_USER=root
 PIDFILE=/var/run/$DAEMON_NAME.pid
+lms=$(grep ^lms /opt/hd44780/config.py|cut -d "'" -f2)
 
 
 do_start()
@@ -41,7 +42,13 @@ do_start()
 	  sleep 2
 	fi
 	
-	## 
+	## make sure the network/logitechmediaserver is running
+	## otherwise wait
+	while ! ping -c1 $lms >/dev/null 2>&1
+               do
+               sleep 1
+        done
+
 	echo "Starting $DAEMON_NAME .."
 	start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile --user $DAEMON_USER --chuid $DAEMON_USER --exec $DAEMON
 }
